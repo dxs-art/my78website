@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>长度查询器 - 看看你的78长度</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #edf5ff 0%, #f4f8fe 45%, #e9f2fd 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 16px;
+      color: #334155;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -20%;
+      left: 20%;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(147, 197, 253, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .main-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 16px 45px rgba(59, 130, 246, 0.08), 0 4px 16px rgba(0, 0, 0, 0.03);
+      padding: 38px 28px 40px;
+      transition: all 0.3s ease;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #3b82f6;
+      letter-spacing: 0.5px;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #64748b;
+      margin-top: 8px;
+      letter-spacing: 0.2px;
+    }
+
+    /* Form Section */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .label {
+      display: block;
+      font-size: 15px;
+      font-weight: 500;
+      color: #334155;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .name-input {
+      width: 100%;
+      height: 48px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0 16px;
+      font-size: 16px;
+      color: #1e293b;
+      background: #ffffff;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .name-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .name-input::placeholder {
+      color: #94a3b8;
+      font-size: 15px;
+    }
+
+    /* Button */
+    .action-btn {
+      width: 100%;
+      height: 48px;
+      background: #3b82f6;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .action-btn:hover {
+      background: #2563eb;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .action-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Result Panel */
+    .result-container {
+      margin-top: 24px;
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 22px 20px;
+      border: 1px solid #edf2f7;
+      animation: fadeIn 0.4s ease-out forwards;
+      display: none;
+    }
+
+    .result-container.show {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .result-header {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .result-username {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+
+    .result-number-box {
+      text-align: center;
+      margin: 10px 0 20px;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-number {
+      font-size: 58px;
+      font-weight: 800;
+      color: #3b82f6;
+      line-height: 1;
+      letter-spacing: -1px;
+      transition: all 0.3s ease;
+    }
+
+    /* Special Easter Egg Styling for 戴熙晟 */
+    .special-glow {
+      background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
+      animation: pulseGlow 1.8s infinite alternate;
+      font-size: 54px;
+    }
+
+    @keyframes pulseGlow {
+      from {
+        filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+      }
+      to {
+        filter: drop-shadow(0 0 16px rgba(236, 72, 153, 0.7));
+      }
+    }
+
+    /* Progress bar section */
+    .scale-wrapper {
+      margin-bottom: 20px;
+    }
+
+    .progress-track {
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 999px;
+      width: 0%;
+      transition: width 2.0s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease;
+    }
+
+    .progress-fill.special-bar {
+      background: linear-gradient(90deg, #f59e0b, #ec4899, #8b5cf6);
+      background-size: 200% 100%;
+      animation: barShine 1.5s linear infinite;
+    }
+
+    @keyframes barShine {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+      padding: 0 2px;
+      user-select: none;
+    }
+
+    /* Comment Box */
+    .comment-card {
+      background: #f1f5f9;
+      padding: 13px 16px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #334155;
+      transition: all 0.3s ease;
+    }
+
+    .comment-card.special-comment {
+      background: linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #ede9fe 100%);
+      border: 1px solid #fbcfe8;
+      color: #701a75;
+      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.12);
+    }
+
+    .comment-level {
+      font-weight: 700;
+      margin-right: 4px;
+      color: #1e293b;
+    }
+
+    .comment-card.special-comment .comment-level {
+      color: #c026d3;
+    }
+
+    /* Toast notice */
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Confetti Canvas for special Easter Egg */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confettiCanvas"></canvas>
+  <div id="toast" class="toast">请输入用户名后再查询哦~</div>
+
+  <main class="main-card">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="title">长度查询器</h1>
+      <p class="subtitle">看看你的78长度</p>
+    </header>
+
+    <!-- Form -->
+    <div class="form-group">
+      <label for="usernameInput" class="label">用户名:</label>
+      <div class="input-wrapper">
+        <input 
+          type="text" 
+          id="usernameInput" 
+          class="name-input" 
+          placeholder="请输入你的用户名" 
+          maxlength="20"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <button id="actionBtn" class="action-btn" type="button">
+      <span id="btnText">开始检测</span>
+    </button>
+
+    <!-- Result Area (hidden initially, appears upon click) -->
+    <section id="resultSection" class="result-container" aria-live="polite">
+      <div class="result-header">分析结果</div>
+      <div id="resultUser" class="result-username">用户名: -</div>
+
+      <div class="result-number-box">
+        <div id="resultVal" class="result-number">0cm</div>
+      </div>
+
+      <div class="scale-wrapper">
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div class="scale-labels">
+          <span>0-5</span>
+          <span>6-10</span>
+          <span>11-13</span>
+          <span>14-16</span>
+          <span>17-20</span>
+          <span>21-25</span>
+        </div>
+      </div>
+
+      <div id="commentBox" class="comment-card">
+        <span id="commentLevel" class="comment-level">优秀:</span>
+        <span id="commentText">相当出色，令人羡慕</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const usernameInput = document.getElementById('usernameInput');
+      const actionBtn = document.getElementById('actionBtn');
+      const btnText = document.getElementById('btnText');
+      const resultSection = document.getElementById('resultSection');
+      const resultUser = document.getElementById('resultUser');
+      const resultVal = document.getElementById('resultVal');
+      const progressFill = document.getElementById('progressFill');
+      const commentBox = document.getElementById('commentBox');
+      const commentLevel = document.getElementById('commentLevel');
+      const commentText = document.getElementById('commentText');
+      const toast = document.getElementById('toast');
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+
+      let hasSearched = false;
+      let toastTimer = null;
+      let confettiActive = false;
+      let particles = [];
+
+      // Canvas resizing
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // Show toast
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2200);
+      }
+
+      // Evaluation comments library
+      const commentsPool = {
+        tier0_5: [
+          { level: '迷你玲珑:', text: '小巧灵动，携带便捷，浓缩的都是大智慧！' },
+          { level: '轻便敏捷:', text: '低调内敛，深藏不露，主打一个返璞归真。' },
+          { level: '微观奇迹:', text: '宛如瑞士精密名表，虽小却零件俱全，潜力无限！' }
+        ],
+        tier6_10: [
+          { level: '经济适用:', text: '日常使用毫无负担，平稳低调，实用主义至上。' },
+          { level: '成长潜能:', text: '基底扎实，尚有广阔进步空间，未来不可限量！' },
+          { level: '亲和友善:', text: '谦逊温和，亲和力拉满，极具安全感。' }
+        ],
+        tier11_13: [
+          { level: '标准合格:', text: '达标水准，中规中矩，稳扎稳打的健康尺寸。' },
+          { level: '中流砥柱:', text: '符合东方平均黄金线，完美契合，值得信赖！' },
+          { level: '黄金均值:', text: '不高调不自卑，刚刚好的中庸之美。' }
+        ],
+        tier14_16: [
+          { level: '良好出众:', text: '超越大部分同龄人，走在路上腰杆都能挺得笔直！' },
+          { level: '黄金比例:', text: '力量与美感兼具，傲视群雄的资本初现！' },
+          { level: '颇具实力:', text: '底气十足，兼具实用与排面，让人刮目相看。' }
+        ],
+        tier17_20: [
+          { level: '优秀拔尖:', text: '相当出色，令人羡慕，走在路上都自带鼓风机！' },
+          { level: '雄姿英发:', text: '天赋异禀，实乃不可多得的猛将，令人肃然起敬！' },
+          { level: '顶流存在:', text: '万里挑一的身材配置，堪称行走的雄性荷尔蒙。' }
+        ],
+        tier21_25: [
+          { level: '天选之子:', text: '惊为天人！天赋异禀，实乃人中龙凤，人间奇迹！' },
+          { level: '降妖伏魔:', text: '国宝级重装配置，霸气侧漏，凡间少有的传说级！' },
+          { level: '旷世奇才:', text: '已经突破了常规认知，走在路上建议申请专属非机动车道！' }
+        ],
+        extremeHigh: [
+          { level: '非人奇观:', text: '已经可以当皮带绕腰三圈了，医学界紧急连夜立项研讨！' },
+          { level: '重型工程:', text: '国家战略级特种横梁，出门切记低头，谨防扫翻天花板！' },
+          { level: '神兽临世:', text: '震撼全城！出门必须配备专属引导车与三脚架随身护驾！' },
+          { level: '镇海神针:', text: '避雷针见了自愧不如，所到之处万人空巷争相瞻仰！' }
+        ],
+        godTier: [
+          { level: '【创世神话】', text: '盘古开天之神柱！贯穿银河系，凡人无法直视的宇宙级终极奇迹！' },
+          { level: '【降维打击】', text: '长度彻底打破爱因斯坦相对论极限，引力透镜因阁下而弯曲，全宇宙公认第一战神！' },
+          { level: '【万物之源】', text: '筋斗云翻了十万八千里还没看到尽头，神明见了也要当场起立敬茶！' },
+          { level: '【千古绝伦】', text: '建议原地申报联合国物质与非物质双重文化遗产，长城在您面前都显得过于娇小！' },
+          { level: '【宇宙主宰】', text: '自带宏大BGM的破界天神，九天揽月、五洋捉鳖只需阁下一抬手！' },
+          { level: '【无法名状】', text: '地球单位已彻底失效，此乃概念级的维度兵器，众星臣服，万灵跪拜！' }
+        ]
+      };
+
+      function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      // Generate random length according to probability rules
+      function calcLength(username) {
+        const trimmed = username.trim();
+
+        // Special Easter Egg for "戴熙晟"
+        if (trimmed === '戴熙晟') {
+          // Greater than 1000 and less than 10000: 1001 ~ 9999
+          const val = Math.floor(Math.random() * (9999 - 1001 + 1)) + 1001;
+          const comment = getRandomItem(commentsPool.godTier);
+          return {
+            val: val,
+            isSpecial: true,
+            comment: comment
+          };
+        }
+
+        // Normal user logic:
+        // High probability: 0 ~ 25 cm (96%)
+        // Low probability: >200cm up to 999cm (~4%, slightly less than 5%)
+        const isExtreme = Math.random() < 0.04;
+        let val;
+        let comment;
+
+        if (isExtreme) {
+          // 200 ~ 999
+          val = Math.floor(Math.random() * (999 - 200 + 1)) + 200;
+          comment = getRandomItem(commentsPool.extremeHigh);
+        } else {
+          // 0 ~ 25
+          val = Math.floor(Math.random() * 26);
+          if (val <= 5) {
+            comment = getRandomItem(commentsPool.tier0_5);
+          } else if (val <= 10) {
+            comment = getRandomItem(commentsPool.tier6_10);
+          } else if (val <= 13) {
+            comment = getRandomItem(commentsPool.tier11_13);
+          } else if (val <= 16) {
+            comment = getRandomItem(commentsPool.tier14_16);
+          } else if (val <= 20) {
+            comment = getRandomItem(commentsPool.tier17_20);
+          } else {
+            comment = getRandomItem(commentsPool.tier21_25);
+          }
+        }
+
+        return {
+          val: val,
+          isSpecial: false,
+          comment: comment
+        };
+      }
+
+      // Confetti system
+      function triggerConfetti() {
+        particles = [];
+        const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f43f5e'];
+        for (let i = 0; i < 90; i++) {
+          particles.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            vx: (Math.random() - 0.5) * 14,
+            vy: (Math.random() - 0.7) * 16,
+            size: Math.random() * 7 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rSpeed: (Math.random() - 0.5) * 12,
+            alpha: 1
+          });
+        }
+        confettiActive = true;
+      }
+
+      function updateConfetti() {
+        if (!confettiActive) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let living = false;
+
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.35; // gravity
+          p.rotation += p.rSpeed;
+          p.alpha -= 0.012;
+
+          if (p.alpha > 0) {
+            living = true;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+            ctx.restore();
+          }
+        }
+
+        if (!living) {
+          confettiActive = false;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+          requestAnimationFrame(updateConfetti);
+        }
+      }
+
+      // Rolling number animation
+      function animateValue(target, isSpecial) {
+        const duration = 2000;
+        const start = 0;
+        const startTime = performance.now();
+
+        function step(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          // Ease out cubic
+          const ease = 1 - Math.pow(1 - progress, 3);
+          const current = Math.floor(start + (target - start) * ease);
+
+          resultVal.textContent = current + 'cm';
+
+          if (progress < 1) {
+            requestAnimationFrame(step);
+          } else {
+            resultVal.textContent = target + 'cm';
+          }
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      // Execute detection
+      function runDetection() {
+        const name = usernameInput.value.trim();
+        if (!name) {
+          showToast('请输入用户名后再查询哦~');
+          usernameInput.focus();
+          return;
+        }
+
+        const data = calcLength(name);
+
+        // Update result display
+        resultUser.textContent = '用户名: ' + name;
+
+        // Reset & apply special effects
+        if (data.isSpecial) {
+          resultVal.classList.add('special-glow');
+          progressFill.classList.add('special-bar');
+          commentBox.classList.add('special-comment');
+          triggerConfetti();
+          requestAnimationFrame(updateConfetti);
+        } else {
+          resultVal.classList.remove('special-glow');
+          progressFill.classList.remove('special-bar');
+          commentBox.classList.remove('special-comment');
+        }
+
+        // Animate number
+        animateValue(data.val, data.isSpecial);
+
+        // Calculate progress percentage
+        // Scale is 0 to 25cm. If length >= 25, bar is 100%
+        let pct = 0;
+        if (data.val >= 25) {
+          pct = 100;
+        } else {
+          pct = Math.round((data.val / 25) * 100);
+        }
+
+        // Reset progress bar to 0 first, then slowly animate to target width
+        progressFill.style.transition = 'none';
+        progressFill.style.width = '0%';
+        void progressFill.offsetWidth; // Force reflow
+        progressFill.style.transition = 'width 2.0s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease';
+        requestAnimationFrame(() => {
+          progressFill.style.width = pct + '%';
+        });
+
+        // Set comment
+        commentLevel.textContent = data.comment.level;
+        commentText.textContent = ' ' + data.comment.text;
+
+        // Show section if first time
+        if (!hasSearched) {
+          resultSection.classList.add('show');
+          btnText.textContent = '重新检测';
+          hasSearched = true;
+        }
+      }
+
+      // Event listeners
+      actionBtn.addEventListener('click', runDetection);
+
+      usernameInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          runDetection();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
